@@ -10,7 +10,7 @@ const boilerplate = (body: string, bg = "#fff") =>
   `<!DOCTYPE html><html><body style="margin:0;width:400px;height:300px;background:${bg};overflow:hidden;">${body}</body></html>`;
 
 const starter = (bg = "#fff") =>
-  `<!DOCTYPE html>\n<html>\n<body style="margin:0;width:400px;height:300px;background:${bg};overflow:hidden;">\n  <!-- build it here -->\n</body>\n</html>`;
+  `<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body {\n      margin: 0;\n      width: 400px;\n      height: 300px;\n      background: ${bg};\n      overflow: hidden;\n    }\n\n    /* write your CSS here */\n  </style>\n</head>\n<body>\n  <!-- write your HTML here -->\n</body>\n</html>`;
 
 export const levels: Level[] = [
   {
