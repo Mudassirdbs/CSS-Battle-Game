@@ -5,30 +5,32 @@ import Editor from "@monaco-editor/react";
 import { levels } from "@/data/levels";
 import { useToast } from "@/hooks/use-toast";
 
-const DIFF_COLORS: Record<string, { bg: string; text: string; glow: string }> = {
-  Easy:   { bg: "#0d2e1a", text: "#00e676", glow: "#00e676" },
-  Medium: { bg: "#2e1f00", text: "#ffab00", glow: "#ffab00" },
-  Hard:   { bg: "#2e0d0d", text: "#ff1744", glow: "#ff1744" },
+const GREEN = "#22c55e";
+const GREEN_DIM = "#16a34a";
+const GREEN_GLOW = "rgba(34,197,94,0.25)";
+
+const DIFF_STYLES: Record<string, { color: string; bg: string }> = {
+  Easy:   { color: "#22c55e", bg: "rgba(34,197,94,0.12)" },
+  Medium: { color: "#eab308", bg: "rgba(234,179,8,0.12)" },
+  Hard:   { color: "#ef4444", bg: "rgba(239,68,68,0.12)" },
 };
 
 function ScoreRing({ score }: { score: number | null }) {
-  const r = 26, sw = 4, nr = r - sw / 2;
+  const r = 26, sw = 3, nr = r - sw / 2;
   const circ = 2 * Math.PI * nr;
   const pct = score !== null ? Math.max(0, Math.min(100, score)) / 100 : 0;
   const offset = circ * (1 - pct);
-  const color = score === null ? "#333" : score >= 90 ? "#00e676" : score >= 60 ? "#ffab00" : "#ff1744";
-
+  const color = score === null ? "#2a2a2a" : score >= 90 ? GREEN : score >= 60 ? "#eab308" : "#ef4444";
   return (
     <div style={{ position: "relative", width: r * 2, height: r * 2, flexShrink: 0 }}>
-      <svg width={r * 2} height={r * 2} style={{ transform: "rotate(-90deg)", position: "absolute", top: 0, left: 0 }}>
-        <circle cx={r} cy={r} r={nr} fill="none" stroke="#1a1a2e" strokeWidth={sw} />
+      <svg width={r * 2} height={r * 2} style={{ transform: "rotate(-90deg)", position: "absolute" }}>
+        <circle cx={r} cy={r} r={nr} fill="none" stroke="#1a1a1a" strokeWidth={sw} />
         <circle cx={r} cy={r} r={nr} fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round"
           strokeDasharray={circ} strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 0.7s cubic-bezier(0.34,1.56,0.64,1), stroke 0.3s" }}
-        />
+          style={{ transition: "stroke-dashoffset 0.7s cubic-bezier(0.34,1.56,0.64,1), stroke 0.3s" }} />
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ color, fontSize: 9, fontWeight: 800, letterSpacing: "-0.5px", lineHeight: 1 }}>
+        <span style={{ color, fontSize: 9, fontWeight: 800, letterSpacing: "-0.5px" }}>
           {score !== null ? `${Math.round(score)}%` : "--"}
         </span>
       </div>
@@ -37,11 +39,11 @@ function ScoreRing({ score }: { score: number | null }) {
 }
 
 function ScoreBar({ score }: { score: number | null }) {
-  if (score === null) return <div style={{ height: 3, background: "#0a0a12" }} />;
-  const color = score >= 90 ? "#00e676" : score >= 60 ? "#ffab00" : "#ff1744";
+  if (score === null) return <div style={{ height: 2, background: "#111" }} />;
+  const color = score >= 90 ? GREEN : score >= 60 ? "#eab308" : "#ef4444";
   return (
-    <div style={{ height: 3, background: "#0a0a12" }}>
-      <div style={{ height: "100%", width: `${score}%`, background: color, boxShadow: `0 0 12px ${color}`, transition: "width 0.9s cubic-bezier(0.34,1.56,0.64,1)", borderRadius: "0 2px 2px 0" }} />
+    <div style={{ height: 2, background: "#111" }}>
+      <div style={{ height: "100%", width: `${score}%`, background: color, boxShadow: `0 0 8px ${color}88`, transition: "width 0.9s cubic-bezier(0.34,1.56,0.64,1)" }} />
     </div>
   );
 }
@@ -58,8 +60,8 @@ export default function Battle() {
   const hiddenTargetRef = useRef<HTMLDivElement>(null);
   const hiddenOutputRef = useRef<HTMLDivElement>(null);
 
-  const diff = DIFF_COLORS[currentLevel.difficulty];
-  const scoreColor = score === null ? "#555" : score >= 90 ? "#00e676" : score >= 60 ? "#ffab00" : "#ff1744";
+  const diff = DIFF_STYLES[currentLevel.difficulty];
+  const scoreColor = score === null ? "#555" : score >= 90 ? GREEN : score >= 60 ? "#eab308" : "#ef4444";
 
   const handleLevelChange = (id: number) => {
     const lvl = levels.find((l) => l.id === id);
@@ -78,69 +80,74 @@ export default function Battle() {
       const load = (src: string) => new Promise<HTMLImageElement>((res) => { const i = new Image(); i.onload = () => res(i); i.src = src; });
       const [imgT, imgO] = await Promise.all([load(t), load(o)]);
       const mk = (img: HTMLImageElement) => { const c = document.createElement("canvas"); c.width = 400; c.height = 300; c.getContext("2d")!.drawImage(img, 0, 0); return c; };
-      const c1 = mk(imgT), c2 = mk(imgO);
-      const d1 = c1.getContext("2d")!.getImageData(0, 0, 400, 300).data;
-      const d2 = c2.getContext("2d")!.getImageData(0, 0, 400, 300).data;
-      const diff2 = pixelmatch(d1, d2, null, 400, 300, { threshold: 0.1 });
-      const pct = ((400 * 300 - diff2) / (400 * 300)) * 100;
+      const d1 = mk(imgT).getContext("2d")!.getImageData(0, 0, 400, 300).data;
+      const d2 = mk(imgO).getContext("2d")!.getImageData(0, 0, 400, 300).data;
+      const diffPx = pixelmatch(d1, d2, null, 400, 300, { threshold: 0.1 });
+      const pct = ((400 * 300 - diffPx) / (400 * 300)) * 100;
       setScore(pct);
       setPulse(true);
-      setTimeout(() => setPulse(false), 700);
+      setTimeout(() => setPulse(false), 600);
       toast({
-        title: pct === 100 ? "PERFECT MATCH" : pct >= 90 ? "SO CLOSE" : pct >= 60 ? "GETTING THERE" : "KEEP TRYING",
+        title: pct === 100 ? "PERFECT" : pct >= 90 ? "SO CLOSE" : pct >= 60 ? "DECENT" : "KEEP TRYING",
         description: pct === 100 ? "Flawless pixel accuracy." : `${pct.toFixed(1)}% pixel match`,
       });
     } catch {
-      toast({ title: "Error", description: "Could not capture the output.", variant: "destructive" });
+      toast({ title: "Error", description: "Could not capture output.", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   useEffect(() => {
-    const handler = (e: MouseEvent) => { if (!(e.target as HTMLElement).closest("[data-menu]")) setShowMenu(false); };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    const h = (e: MouseEvent) => { if (!(e.target as HTMLElement).closest("[data-menu]")) setShowMenu(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
   }, []);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#07070f", color: "#c8cfe8", fontFamily: "'JetBrains Mono', monospace", overflow: "hidden" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#0a0a0a", color: "#e5e5e5", fontFamily: "'JetBrains Mono', monospace", overflow: "hidden" }}>
 
       {/* ── HEADER ── */}
-      <header style={{ height: 54, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 18px", background: "#0a0a18", borderBottom: "1px solid #151530" }}>
+      <header style={{ height: 52, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", background: "#0d0d0d", borderBottom: "1px solid #1a1a1a" }}>
 
-        {/* Logo */}
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-            <div style={{ width: 6, height: 32, borderRadius: 3, background: "linear-gradient(180deg,#a855f7,#6366f1,#3b82f6)", boxShadow: "0 0 16px #a855f744" }} />
-            <span style={{ fontWeight: 900, fontSize: 15, letterSpacing: 4, color: "#fff", textTransform: "uppercase" }}>CSS<span style={{ color: "#a855f7", margin: "0 3px" }}>&#x2605;</span>BATTLE</span>
+        {/* Left: logo + level selector */}
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          {/* Logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 6, background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 16px ${GREEN_GLOW}` }}>
+              <span style={{ color: "#000", fontWeight: 900, fontSize: 13, lineHeight: 1 }}>&lt;/&gt;</span>
+            </div>
+            <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: 2, color: "#fff", textTransform: "uppercase" }}>
+              CSS<span style={{ color: GREEN }}>Battle</span>
+            </span>
           </div>
 
-          {/* Level selector */}
+          {/* Divider */}
+          <div style={{ width: 1, height: 24, background: "#1f1f1f" }} />
+
+          {/* Level picker */}
           <div style={{ position: "relative" }} data-menu>
             <button
               data-testid="select-level"
               onClick={() => setShowMenu((v) => !v)}
-              style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 14px", background: "#0f0f1e", border: "1px solid #1e1e3f", borderRadius: 8, cursor: "pointer", color: "#c8cfe8", fontSize: 12, fontFamily: "inherit", transition: "border-color 0.2s" }}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#a855f7")}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#1e1e3f")}
+              style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 14px", background: "#111", border: `1px solid ${showMenu ? GREEN + "66" : "#222"}`, borderRadius: 6, cursor: "pointer", color: "#e5e5e5", fontSize: 12, fontFamily: "inherit", transition: "border-color 0.2s, box-shadow 0.2s", boxShadow: showMenu ? `0 0 0 3px ${GREEN_GLOW}` : "none" }}
             >
-              <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase", color: diff.text, background: diff.bg, padding: "3px 7px", borderRadius: 4, border: `1px solid ${diff.text}44` }}>
+              <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase", color: diff.color, background: diff.bg, padding: "3px 8px", borderRadius: 3 }}>
                 {currentLevel.difficulty}
               </span>
-              <span style={{ color: "#3d3d6b", fontSize: 11 }}>#{currentLevel.id}</span>
-              <span style={{ fontWeight: 700, color: "#e2e8f0" }}>{currentLevel.title}</span>
-              <span style={{ color: "#3d3d6b", fontSize: 9, marginLeft: 2 }}>▾</span>
+              <span style={{ color: "#333", fontSize: 11 }}>#{currentLevel.id}</span>
+              <span style={{ fontWeight: 600, color: "#ddd" }}>{currentLevel.title}</span>
+              <span style={{ color: "#333", fontSize: 9, marginLeft: 2 }}>▾</span>
             </button>
 
             {showMenu && (
-              <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, background: "#0d0d1f", border: "1px solid #1e1e3f", borderRadius: 10, minWidth: 290, maxHeight: 380, overflowY: "auto", boxShadow: "0 24px 64px rgba(0,0,0,0.8), 0 0 0 1px #a855f722", zIndex: 999 }}>
+              <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, background: "#0d0d0d", border: "1px solid #1f1f1f", borderRadius: 8, minWidth: 280, maxHeight: 380, overflowY: "auto", boxShadow: `0 24px 48px rgba(0,0,0,0.9), 0 0 0 1px #1f1f1f`, zIndex: 999 }}>
                 {(["Easy", "Medium", "Hard"] as const).map((d) => {
-                  const dc = DIFF_COLORS[d];
+                  const dc = DIFF_STYLES[d];
                   return (
                     <div key={d}>
-                      <div style={{ padding: "10px 14px 5px", fontSize: 10, fontWeight: 800, color: dc.text, letterSpacing: 2, textTransform: "uppercase", borderBottom: "1px solid #12122a" }}>
-                        — {d} —
+                      <div style={{ padding: "10px 14px 5px", fontSize: 10, fontWeight: 800, color: dc.color, letterSpacing: 2, textTransform: "uppercase", borderBottom: "1px solid #161616" }}>
+                        {d}
                       </div>
                       {levels.filter((l) => l.difficulty === d).map((lvl) => {
                         const active = lvl.id === levelId;
@@ -149,13 +156,13 @@ export default function Battle() {
                             key={lvl.id}
                             data-testid={`level-item-${lvl.id}`}
                             onClick={() => handleLevelChange(lvl.id)}
-                            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 14px", background: active ? "#1a0a2e" : "transparent", border: "none", cursor: "pointer", color: active ? "#e2e8f0" : "#7878a8", fontSize: 12, fontFamily: "inherit", textAlign: "left" }}
-                            onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = "#12122a"; }}
-                            onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 14px", background: active ? "#111" : "transparent", border: "none", borderLeft: active ? `2px solid ${GREEN}` : "2px solid transparent", cursor: "pointer", color: active ? "#fff" : "#666", fontSize: 12, fontFamily: "inherit", textAlign: "left", transition: "all 0.12s" }}
+                            onMouseEnter={(e) => { if (!active) { (e.currentTarget as HTMLButtonElement).style.background = "#111"; (e.currentTarget as HTMLButtonElement).style.color = "#ccc"; } }}
+                            onMouseLeave={(e) => { if (!active) { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "#666"; } }}
                           >
-                            <span style={{ color: "#2a2a4e", width: 22, fontSize: 10 }}>#{lvl.id}</span>
+                            <span style={{ color: "#2a2a2a", width: 22, fontSize: 10 }}>#{lvl.id}</span>
                             <span style={{ flex: 1 }}>{lvl.title}</span>
-                            {active && <span style={{ color: "#a855f7", fontSize: 12 }}>◀</span>}
+                            {active && <span style={{ color: GREEN, fontSize: 14, lineHeight: 1 }}>●</span>}
                           </button>
                         );
                       })}
@@ -167,10 +174,10 @@ export default function Battle() {
           </div>
         </div>
 
-        {/* Score + Submit */}
+        {/* Right: score + submit */}
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           {score !== null && (
-            <div data-testid="text-score" style={{ fontSize: 14, fontWeight: 800, color: scoreColor, letterSpacing: 1, textShadow: `0 0 12px ${scoreColor}` }}>
+            <div data-testid="text-score" style={{ fontSize: 14, fontWeight: 800, color: scoreColor, letterSpacing: 1, fontVariantNumeric: "tabular-nums" }}>
               {score.toFixed(1)}%
             </div>
           )}
@@ -179,32 +186,33 @@ export default function Battle() {
             data-testid="button-submit"
             onClick={calculateScore}
             disabled={isSubmitting}
-            style={{ padding: "9px 28px", background: isSubmitting ? "#1a1a2e" : "linear-gradient(135deg,#a855f7 0%,#6366f1 50%,#3b82f6 100%)", border: "none", borderRadius: 8, color: "#fff", fontWeight: 800, fontSize: 12, fontFamily: "inherit", letterSpacing: 2, textTransform: "uppercase", cursor: isSubmitting ? "not-allowed" : "pointer", boxShadow: isSubmitting ? "none" : "0 0 24px #a855f755, 0 4px 12px rgba(168,85,247,0.3)", transition: "all 0.25s", opacity: pulse ? 0.5 : 1 }}
+            style={{ padding: "8px 24px", background: isSubmitting ? "#111" : GREEN, border: "none", borderRadius: 6, color: isSubmitting ? "#333" : "#000", fontWeight: 800, fontSize: 12, fontFamily: "inherit", letterSpacing: 1.5, textTransform: "uppercase", cursor: isSubmitting ? "not-allowed" : "pointer", boxShadow: isSubmitting ? "none" : `0 0 20px ${GREEN_GLOW}`, transition: "all 0.2s", opacity: pulse ? 0.6 : 1 }}
+            onMouseEnter={(e) => { if (!isSubmitting) { (e.currentTarget as HTMLButtonElement).style.background = GREEN_DIM; } }}
+            onMouseLeave={(e) => { if (!isSubmitting) { (e.currentTarget as HTMLButtonElement).style.background = GREEN; } }}
           >
             {isSubmitting ? "Analyzing..." : "Submit"}
           </button>
         </div>
       </header>
 
-      {/* Score bar */}
+      {/* Score progress bar */}
       <ScoreBar score={score} />
 
-      {/* ── MAIN AREA ── */}
+      {/* ── MAIN SPLIT ── */}
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
-        {/* Editor panel */}
-        <div style={{ width: "50%", display: "flex", flexDirection: "column", borderRight: "1px solid #151530" }}>
-          <div style={{ height: 36, background: "#09091a", borderBottom: "1px solid #151530", display: "flex", alignItems: "center", padding: "0 0", flexShrink: 0 }}>
-            <div style={{ height: "100%", display: "flex", alignItems: "center", gap: 8, padding: "0 16px", background: "#0f0f20", borderRight: "1px solid #151530" }}>
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f57" }} />
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ffbd2e" }} />
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#28ca41" }} />
-              <span style={{ marginLeft: 6, fontSize: 11, color: "#3d3d6b" }}>style.html</span>
+        {/* Editor */}
+        <div style={{ width: "50%", display: "flex", flexDirection: "column", borderRight: "1px solid #1a1a1a" }}>
+          {/* Tab bar */}
+          <div style={{ height: 38, background: "#0d0d0d", borderBottom: "1px solid #1a1a1a", display: "flex", alignItems: "stretch", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 16px", borderRight: "1px solid #1a1a1a", borderBottom: `2px solid ${GREEN}`, background: "#111", marginBottom: -1 }}>
+              <span style={{ color: GREEN, fontSize: 11 }}>◆</span>
+              <span style={{ fontSize: 11, color: "#ccc", letterSpacing: 0.5 }}>style.html</span>
             </div>
             <div style={{ flex: 1 }} />
-            <span style={{ fontSize: 10, color: "#2a2a4e", marginRight: 14 }}>HTML / CSS</span>
+            <div style={{ display: "flex", alignItems: "center", padding: "0 14px", fontSize: 10, color: "#2a2a2a", letterSpacing: 1 }}>HTML / CSS</div>
           </div>
-          <Suspense fallback={<div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#2a2a4e" }}>Loading editor...</div>}>
+          <Suspense fallback={<div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#2a2a2a", fontSize: 12 }}>Loading editor...</div>}>
             <div style={{ flex: 1, overflow: "hidden" }}>
               <Editor
                 height="100%"
@@ -219,18 +227,18 @@ export default function Battle() {
         </div>
 
         {/* Preview panels */}
-        <div style={{ width: "50%", display: "flex", flexDirection: "column", background: "#07070f" }}>
+        <div style={{ width: "50%", display: "flex", flexDirection: "column", background: "#0a0a0a" }}>
 
           {/* Target */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", borderBottom: "1px solid #151530" }}>
-            <div style={{ height: 36, background: "#09091a", borderBottom: "1px solid #151530", display: "flex", alignItems: "center", padding: "0 14px", gap: 8, flexShrink: 0 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#a855f7", boxShadow: "0 0 8px #a855f7" }} />
-              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, color: "#a855f7", textTransform: "uppercase" }}>Target</span>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", borderBottom: "1px solid #1a1a1a" }}>
+            <div style={{ height: 38, background: "#0d0d0d", borderBottom: "1px solid #1a1a1a", display: "flex", alignItems: "center", padding: "0 16px", gap: 10, flexShrink: 0 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: GREEN, boxShadow: `0 0 6px ${GREEN}`, display: "inline-block", flexShrink: 0 }} />
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: GREEN, textTransform: "uppercase" }}>Target</span>
               <div style={{ flex: 1 }} />
-              <span style={{ fontSize: 10, color: diff.text, fontWeight: 700 }}>{currentLevel.difficulty}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: diff.color, background: diff.bg, padding: "2px 8px", borderRadius: 3, letterSpacing: 1 }}>{currentLevel.difficulty}</span>
             </div>
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "radial-gradient(ellipse at center, #0d0d20 0%, #07070f 100%)", padding: 12 }}>
-              <div style={{ width: 400, height: 300, borderRadius: 6, overflow: "hidden", boxShadow: "0 0 0 1px #1e1e3f, 0 0 40px rgba(168,85,247,0.08), 0 20px 60px rgba(0,0,0,0.7)" }}>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "#0a0a0a", padding: 16 }}>
+              <div style={{ width: 400, height: 300, borderRadius: 4, overflow: "hidden", boxShadow: `0 0 0 1px #1f1f1f, 0 20px 60px rgba(0,0,0,0.8)` }}>
                 <iframe title="Target" srcDoc={currentLevel.targetHTML} sandbox="allow-scripts" style={{ width: 400, height: 300, border: "none", display: "block" }} />
               </div>
             </div>
@@ -238,16 +246,16 @@ export default function Battle() {
 
           {/* Output */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-            <div style={{ height: 36, background: "#09091a", borderBottom: "1px solid #151530", display: "flex", alignItems: "center", padding: "0 14px", gap: 8, flexShrink: 0 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#6366f1", boxShadow: "0 0 8px #6366f1" }} />
-              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, color: "#6366f1", textTransform: "uppercase" }}>Your Output</span>
+            <div style={{ height: 38, background: "#0d0d0d", borderBottom: "1px solid #1a1a1a", display: "flex", alignItems: "center", padding: "0 16px", gap: 10, flexShrink: 0 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#555", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: "#555", textTransform: "uppercase" }}>Your Output</span>
               <div style={{ flex: 1 }} />
               {score !== null && (
-                <span style={{ fontSize: 11, fontWeight: 800, color: scoreColor, textShadow: `0 0 8px ${scoreColor}` }}>{score.toFixed(1)}% match</span>
+                <span style={{ fontSize: 11, fontWeight: 800, color: scoreColor, letterSpacing: 0.5 }}>{score.toFixed(1)}% match</span>
               )}
             </div>
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "radial-gradient(ellipse at center, #0d0d20 0%, #07070f 100%)", padding: 12 }}>
-              <div style={{ width: 400, height: 300, borderRadius: 6, overflow: "hidden", boxShadow: score !== null ? `0 0 0 2px ${scoreColor}55, 0 0 40px ${scoreColor}22, 0 20px 60px rgba(0,0,0,0.7)` : "0 0 0 1px #1e1e3f, 0 20px 60px rgba(0,0,0,0.7)", transition: "box-shadow 0.5s ease" }}>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "#0a0a0a", padding: 16 }}>
+              <div style={{ width: 400, height: 300, borderRadius: 4, overflow: "hidden", transition: "box-shadow 0.4s ease", boxShadow: score !== null ? `0 0 0 1px ${scoreColor}44, 0 0 24px ${scoreColor}22, 0 20px 60px rgba(0,0,0,0.8)` : "0 0 0 1px #1f1f1f, 0 20px 60px rgba(0,0,0,0.8)" }}>
                 <iframe title="Your Output" srcDoc={userCode} sandbox="allow-scripts" style={{ width: 400, height: 300, border: "none", display: "block" }} />
               </div>
             </div>
@@ -255,7 +263,7 @@ export default function Battle() {
         </div>
       </div>
 
-      {/* Hidden capture divs */}
+      {/* Hidden capture */}
       <div style={{ position: "fixed", top: -9999, left: -9999, pointerEvents: "none", opacity: 0 }}>
         <div ref={hiddenTargetRef} style={{ width: 400, height: 300, overflow: "hidden" }}>
           <iframe srcDoc={currentLevel.targetHTML} style={{ width: 400, height: 300, border: "none" }} />
