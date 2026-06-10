@@ -1,8 +1,0 @@
-uploads = []
-generated = []
-
-[[outputs]]
-id = "AMuuZbnWLisugF-BqtQdL"
-uri = "file://artifacts/css-battle/DOCUMENTATION.md"
-type = "text"
-title = "CSS Battle — Project Documentation"
