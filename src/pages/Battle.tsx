@@ -1,9 +1,11 @@
 import { useState, useRef, Suspense, useEffect } from "react";
 import { toPng } from "html-to-image";
 import pixelmatch from "pixelmatch";
+import { useTheme } from "next-themes";
 import Editor from "@monaco-editor/react";
 import { levels } from "@/data/levels";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const GREEN = "#22c55e";
 const GREEN_DIM = "#16a34a";
@@ -57,6 +59,7 @@ export default function Battle() {
   const [showMenu, setShowMenu] = useState(false);
   const [pulse, setPulse] = useState(false);
   const { toast } = useToast();
+  const { theme } = useTheme();
   const hiddenTargetRef = useRef<HTMLDivElement>(null);
   const hiddenOutputRef = useRef<HTMLDivElement>(null);
 
@@ -105,10 +108,10 @@ export default function Battle() {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-[#0a0a0a] text-[#e5e5e5] font-mono overflow-hidden">
+    <div className="flex flex-col h-screen bg-background text-foreground font-mono overflow-hidden">
 
       {/* ── HEADER ── */}
-      <header className="h-[52px] shrink-0 flex items-center justify-between px-3 lg:px-5 bg-[#0d0d0d] border-b border-[#1a1a1a]">
+      <header className="h-[52px] shrink-0 flex items-center justify-between px-3 lg:px-5 bg-card border-b border-border">
 
         {/* Left: logo + level selector */}
         <div className="flex items-center gap-2 lg:gap-4">
@@ -123,7 +126,7 @@ export default function Battle() {
           </div>
 
           {/* Divider */}
-          <div className="hidden sm:block w-[1px] h-6 bg-[#1f1f1f]" />
+          <div className="hidden sm:block w-[1px] h-6 bg-border" />
 
           {/* Level picker */}
           <div style={{ position: "relative" }} data-menu>
@@ -141,12 +144,12 @@ export default function Battle() {
             </button>
 
             {showMenu && (
-              <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, background: "#0d0d0d", border: "1px solid #1f1f1f", borderRadius: 8, minWidth: 280, maxHeight: 380, overflowY: "auto", boxShadow: `0 24px 48px rgba(0,0,0,0.9), 0 0 0 1px #1f1f1f`, zIndex: 999 }}>
+              <div className="absolute top-[calc(100%+6px)] left-0 bg-popover text-popover-foreground border border-border rounded-lg min-w-[280px] max-h-[380px] overflow-y-auto shadow-2xl z-50">
                 {(["Easy", "Medium", "Hard"] as const).map((d) => {
                   const dc = DIFF_STYLES[d];
                   return (
                     <div key={d}>
-                      <div style={{ padding: "10px 14px 5px", fontSize: 10, fontWeight: 800, color: dc.color, letterSpacing: 2, textTransform: "uppercase", borderBottom: "1px solid #161616" }}>
+                      <div className="px-3.5 pt-2.5 pb-1 text-[10px] font-extrabold tracking-widest uppercase border-b border-border" style={{ color: dc.color }}>
                         {d}
                       </div>
                       {levels.filter((l) => l.difficulty === d).map((lvl) => {
@@ -176,6 +179,7 @@ export default function Battle() {
 
         {/* Right: score + submit */}
         <div className="flex items-center gap-2 lg:gap-3.5">
+          <ThemeToggle />
           {score !== null && (
             <div data-testid="text-score" className="hidden sm:block text-[14px] font-extrabold tracking-wide tabular-nums" style={{ color: scoreColor }}>
               {score.toFixed(1)}%
@@ -202,21 +206,21 @@ export default function Battle() {
       <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
 
         {/* Editor */}
-        <div className="w-full lg:w-1/2 flex flex-col border-b lg:border-b-0 lg:border-r border-[#1a1a1a] min-h-[50vh] lg:min-h-0 shrink-0 lg:shrink">
+        <div className="w-full lg:w-1/2 flex flex-col border-b lg:border-b-0 lg:border-r border-border min-h-[50vh] lg:min-h-0 shrink-0 lg:shrink">
           {/* Tab bar */}
-          <div style={{ height: 38, background: "#0d0d0d", borderBottom: "1px solid #1a1a1a", display: "flex", alignItems: "stretch", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 16px", borderRight: "1px solid #1a1a1a", borderBottom: `2px solid ${GREEN}`, background: "#111", marginBottom: -1 }}>
+          <div className="h-[38px] bg-card border-b border-border flex items-stretch shrink-0">
+            <div className="flex items-center gap-2 px-4 border-r border-border bg-background border-b-2" style={{ borderBottomColor: GREEN, marginBottom: -1 }}>
               <span style={{ color: GREEN, fontSize: 11 }}>◆</span>
               <span style={{ fontSize: 11, color: "#ccc", letterSpacing: 0.5 }}>style.html</span>
             </div>
             <div style={{ flex: 1 }} />
-            <div style={{ display: "flex", alignItems: "center", padding: "0 14px", fontSize: 10, color: "#2a2a2a", letterSpacing: 1 }}>HTML / CSS</div>
+            <div className="flex items-center px-3.5 text-[10px] text-muted-foreground tracking-widest">HTML / CSS</div>
           </div>
           <Suspense fallback={<div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#2a2a2a", fontSize: 12 }}>Loading editor...</div>}>
             <div style={{ flex: 1, overflow: "hidden" }}>
               <Editor
                 height="100%"
-                theme="vs-dark"
+                theme={theme === "dark" ? "vs-dark" : "light"}
                 language="html"
                 value={userCode}
                 onChange={(val) => setUserCode(val || "")}
@@ -227,26 +231,26 @@ export default function Battle() {
         </div>
 
         {/* Preview panels */}
-        <div className="w-full lg:w-1/2 flex flex-col bg-[#0a0a0a] shrink-0 min-h-[80vh] lg:min-h-0">
+        <div className="w-full lg:w-1/2 flex flex-col bg-background shrink-0 min-h-[80vh] lg:min-h-0">
 
           {/* Target */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", borderBottom: "1px solid #1a1a1a" }}>
-            <div style={{ height: 38, background: "#0d0d0d", borderBottom: "1px solid #1a1a1a", display: "flex", alignItems: "center", padding: "0 16px", gap: 10, flexShrink: 0 }}>
+          <div className="flex-1 flex flex-col border-b border-border">
+            <div className="h-[38px] bg-card border-b border-border flex items-center px-4 gap-2.5 shrink-0">
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: GREEN, boxShadow: `0 0 6px ${GREEN}`, display: "inline-block", flexShrink: 0 }} />
               <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: GREEN, textTransform: "uppercase" }}>Target</span>
               <div style={{ flex: 1 }} />
               <span style={{ fontSize: 10, fontWeight: 700, color: diff.color, background: diff.bg, padding: "2px 8px", borderRadius: 3, letterSpacing: 1 }}>{currentLevel.difficulty}</span>
             </div>
-            <div className="flex-1 flex items-center justify-center bg-[#0a0a0a] p-4 overflow-x-auto">
-              <div style={{ width: 400, height: 300, borderRadius: 4, overflow: "hidden", flexShrink: 0, boxShadow: `0 0 0 1px #1f1f1f, 0 20px 60px rgba(0,0,0,0.8)` }}>
+            <div className="flex-1 flex items-center justify-center bg-background p-4 overflow-x-auto">
+              <div className="w-[400px] h-[300px] rounded overflow-hidden shrink-0 ring-1 ring-border shadow-2xl">
                 <iframe title="Target" srcDoc={currentLevel.targetHTML} sandbox="allow-scripts" style={{ width: 400, height: 300, border: "none", display: "block" }} />
               </div>
             </div>
           </div>
 
           {/* Output */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-            <div style={{ height: 38, background: "#0d0d0d", borderBottom: "1px solid #1a1a1a", display: "flex", alignItems: "center", padding: "0 16px", gap: 10, flexShrink: 0 }}>
+          <div className="flex-1 flex flex-col">
+            <div className="h-[38px] bg-card border-b border-border flex items-center px-4 gap-2.5 shrink-0">
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#555", display: "inline-block", flexShrink: 0 }} />
               <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: "#555", textTransform: "uppercase" }}>Your Output</span>
               <div style={{ flex: 1 }} />
@@ -254,8 +258,8 @@ export default function Battle() {
                 <span style={{ fontSize: 11, fontWeight: 800, color: scoreColor, letterSpacing: 0.5 }}>{score.toFixed(1)}% match</span>
               )}
             </div>
-            <div className="flex-1 flex items-center justify-center bg-[#0a0a0a] p-4 overflow-x-auto">
-              <div style={{ width: 400, height: 300, borderRadius: 4, overflow: "hidden", flexShrink: 0, transition: "box-shadow 0.4s ease", boxShadow: score !== null ? `0 0 0 1px ${scoreColor}44, 0 0 24px ${scoreColor}22, 0 20px 60px rgba(0,0,0,0.8)` : "0 0 0 1px #1f1f1f, 0 20px 60px rgba(0,0,0,0.8)" }}>
+            <div className="flex-1 flex items-center justify-center bg-background p-4 overflow-x-auto">
+              <div className="w-[400px] h-[300px] rounded overflow-hidden shrink-0 transition-shadow duration-400" style={{ boxShadow: score !== null ? `0 0 0 1px ${scoreColor}44, 0 0 24px ${scoreColor}22, 0 20px 60px rgba(0,0,0,0.4)` : "0 0 0 1px hsl(var(--border)), 0 20px 60px rgba(0,0,0,0.4)" }}>
                 <iframe title="Your Output" srcDoc={userCode} sandbox="allow-scripts" style={{ width: 400, height: 300, border: "none", display: "block" }} />
               </div>
             </div>
