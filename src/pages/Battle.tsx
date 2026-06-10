@@ -105,25 +105,25 @@ export default function Battle() {
   }, []);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#0a0a0a", color: "#e5e5e5", fontFamily: "'JetBrains Mono', monospace", overflow: "hidden" }}>
+    <div className="flex flex-col h-screen bg-[#0a0a0a] text-[#e5e5e5] font-mono overflow-hidden">
 
       {/* ── HEADER ── */}
-      <header style={{ height: 52, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", background: "#0d0d0d", borderBottom: "1px solid #1a1a1a" }}>
+      <header className="h-[52px] shrink-0 flex items-center justify-between px-3 lg:px-5 bg-[#0d0d0d] border-b border-[#1a1a1a]">
 
         {/* Left: logo + level selector */}
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div className="flex items-center gap-2 lg:gap-4">
           {/* Logo */}
           <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
             <div style={{ width: 28, height: 28, borderRadius: 6, background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 16px ${GREEN_GLOW}` }}>
               <span style={{ color: "#000", fontWeight: 900, fontSize: 13, lineHeight: 1 }}>&lt;/&gt;</span>
             </div>
-            <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: 2, color: "#fff", textTransform: "uppercase" }}>
+            <span className="hidden sm:inline-block font-extrabold text-[15px] tracking-widest text-white uppercase">
               CSS<span style={{ color: GREEN }}>Battle</span>
             </span>
           </div>
 
           {/* Divider */}
-          <div style={{ width: 1, height: 24, background: "#1f1f1f" }} />
+          <div className="hidden sm:block w-[1px] h-6 bg-[#1f1f1f]" />
 
           {/* Level picker */}
           <div style={{ position: "relative" }} data-menu>
@@ -136,7 +136,7 @@ export default function Battle() {
                 {currentLevel.difficulty}
               </span>
               <span style={{ color: "#333", fontSize: 11 }}>#{currentLevel.id}</span>
-              <span style={{ fontWeight: 600, color: "#ddd" }}>{currentLevel.title}</span>
+              <span className="hidden sm:inline-block text-[#ddd] font-semibold">{currentLevel.title}</span>
               <span style={{ color: "#333", fontSize: 9, marginLeft: 2 }}>▾</span>
             </button>
 
@@ -175,9 +175,9 @@ export default function Battle() {
         </div>
 
         {/* Right: score + submit */}
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div className="flex items-center gap-2 lg:gap-3.5">
           {score !== null && (
-            <div data-testid="text-score" style={{ fontSize: 14, fontWeight: 800, color: scoreColor, letterSpacing: 1, fontVariantNumeric: "tabular-nums" }}>
+            <div data-testid="text-score" className="hidden sm:block text-[14px] font-extrabold tracking-wide tabular-nums" style={{ color: scoreColor }}>
               {score.toFixed(1)}%
             </div>
           )}
@@ -199,10 +199,10 @@ export default function Battle() {
       <ScoreBar score={score} />
 
       {/* ── MAIN SPLIT ── */}
-      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+      <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
 
         {/* Editor */}
-        <div style={{ width: "50%", display: "flex", flexDirection: "column", borderRight: "1px solid #1a1a1a" }}>
+        <div className="w-full lg:w-1/2 flex flex-col border-b lg:border-b-0 lg:border-r border-[#1a1a1a] min-h-[50vh] lg:min-h-0 shrink-0 lg:shrink">
           {/* Tab bar */}
           <div style={{ height: 38, background: "#0d0d0d", borderBottom: "1px solid #1a1a1a", display: "flex", alignItems: "stretch", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 16px", borderRight: "1px solid #1a1a1a", borderBottom: `2px solid ${GREEN}`, background: "#111", marginBottom: -1 }}>
@@ -227,7 +227,7 @@ export default function Battle() {
         </div>
 
         {/* Preview panels */}
-        <div style={{ width: "50%", display: "flex", flexDirection: "column", background: "#0a0a0a" }}>
+        <div className="w-full lg:w-1/2 flex flex-col bg-[#0a0a0a] shrink-0 min-h-[80vh] lg:min-h-0">
 
           {/* Target */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", borderBottom: "1px solid #1a1a1a" }}>
@@ -237,8 +237,8 @@ export default function Battle() {
               <div style={{ flex: 1 }} />
               <span style={{ fontSize: 10, fontWeight: 700, color: diff.color, background: diff.bg, padding: "2px 8px", borderRadius: 3, letterSpacing: 1 }}>{currentLevel.difficulty}</span>
             </div>
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "#0a0a0a", padding: 16 }}>
-              <div style={{ width: 400, height: 300, borderRadius: 4, overflow: "hidden", boxShadow: `0 0 0 1px #1f1f1f, 0 20px 60px rgba(0,0,0,0.8)` }}>
+            <div className="flex-1 flex items-center justify-center bg-[#0a0a0a] p-4 overflow-x-auto">
+              <div style={{ width: 400, height: 300, borderRadius: 4, overflow: "hidden", flexShrink: 0, boxShadow: `0 0 0 1px #1f1f1f, 0 20px 60px rgba(0,0,0,0.8)` }}>
                 <iframe title="Target" srcDoc={currentLevel.targetHTML} sandbox="allow-scripts" style={{ width: 400, height: 300, border: "none", display: "block" }} />
               </div>
             </div>
@@ -254,8 +254,8 @@ export default function Battle() {
                 <span style={{ fontSize: 11, fontWeight: 800, color: scoreColor, letterSpacing: 0.5 }}>{score.toFixed(1)}% match</span>
               )}
             </div>
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "#0a0a0a", padding: 16 }}>
-              <div style={{ width: 400, height: 300, borderRadius: 4, overflow: "hidden", transition: "box-shadow 0.4s ease", boxShadow: score !== null ? `0 0 0 1px ${scoreColor}44, 0 0 24px ${scoreColor}22, 0 20px 60px rgba(0,0,0,0.8)` : "0 0 0 1px #1f1f1f, 0 20px 60px rgba(0,0,0,0.8)" }}>
+            <div className="flex-1 flex items-center justify-center bg-[#0a0a0a] p-4 overflow-x-auto">
+              <div style={{ width: 400, height: 300, borderRadius: 4, overflow: "hidden", flexShrink: 0, transition: "box-shadow 0.4s ease", boxShadow: score !== null ? `0 0 0 1px ${scoreColor}44, 0 0 24px ${scoreColor}22, 0 20px 60px rgba(0,0,0,0.8)` : "0 0 0 1px #1f1f1f, 0 20px 60px rgba(0,0,0,0.8)" }}>
                 <iframe title="Your Output" srcDoc={userCode} sandbox="allow-scripts" style={{ width: 400, height: 300, border: "none", display: "block" }} />
               </div>
             </div>
