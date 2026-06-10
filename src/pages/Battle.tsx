@@ -22,7 +22,7 @@ function ScoreRing({ score }: { score: number | null }) {
   const circ = 2 * Math.PI * nr;
   const pct = score !== null ? Math.max(0, Math.min(100, score)) / 100 : 0;
   const offset = circ * (1 - pct);
-  const color = score === null ? "#2a2a2a" : score >= 90 ? GREEN : score >= 60 ? "#eab308" : "#ef4444";
+  const color = score === null ? "var(--muted-foreground)" : score >= 90 ? GREEN : score >= 60 ? "#eab308" : "#ef4444";
   return (
     <div style={{ position: "relative", width: r * 2, height: r * 2, flexShrink: 0 }}>
       <svg width={r * 2} height={r * 2} style={{ transform: "rotate(-90deg)", position: "absolute" }}>
@@ -41,10 +41,10 @@ function ScoreRing({ score }: { score: number | null }) {
 }
 
 function ScoreBar({ score }: { score: number | null }) {
-  if (score === null) return <div style={{ height: 2, background: "#111" }} />;
+  if (score === null) return <div className="h-[2px] bg-secondary" />;
   const color = score >= 90 ? GREEN : score >= 60 ? "#eab308" : "#ef4444";
   return (
-    <div style={{ height: 2, background: "#111" }}>
+    <div className="h-[2px] bg-secondary">
       <div style={{ height: "100%", width: `${score}%`, background: color, boxShadow: `0 0 8px ${color}88`, transition: "width 0.9s cubic-bezier(0.34,1.56,0.64,1)" }} />
     </div>
   );
@@ -64,7 +64,7 @@ export default function Battle() {
   const hiddenOutputRef = useRef<HTMLDivElement>(null);
 
   const diff = DIFF_STYLES[currentLevel.difficulty];
-  const scoreColor = score === null ? "#555" : score >= 90 ? GREEN : score >= 60 ? "#eab308" : "#ef4444";
+  const scoreColor = score === null ? "hsl(var(--muted-foreground))" : score >= 90 ? GREEN : score >= 60 ? "#eab308" : "#ef4444";
 
   const handleLevelChange = (id: number) => {
     const lvl = levels.find((l) => l.id === id);
@@ -116,11 +116,11 @@ export default function Battle() {
         {/* Left: logo + level selector */}
         <div className="flex items-center gap-2 lg:gap-4">
           {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 6, background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 16px ${GREEN_GLOW}` }}>
-              <span style={{ color: "#000", fontWeight: 900, fontSize: 13, lineHeight: 1 }}>&lt;/&gt;</span>
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-md bg-green-500 flex items-center justify-center shadow-[0_0_16px_rgba(34,197,94,0.25)]">
+              <span className="text-black font-black text-[13px] leading-none">&lt;/&gt;</span>
             </div>
-            <span className="hidden sm:inline-block font-extrabold text-[15px] tracking-widest text-white uppercase">
+            <span className="hidden sm:inline-block font-extrabold text-[15px] tracking-widest text-foreground uppercase">
               CSS<span style={{ color: GREEN }}>Battle</span>
             </span>
           </div>
@@ -133,14 +133,14 @@ export default function Battle() {
             <button
               data-testid="select-level"
               onClick={() => setShowMenu((v) => !v)}
-              style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 14px", background: "#111", border: `1px solid ${showMenu ? GREEN + "66" : "#222"}`, borderRadius: 6, cursor: "pointer", color: "#e5e5e5", fontSize: 12, fontFamily: "inherit", transition: "border-color 0.2s, box-shadow 0.2s", boxShadow: showMenu ? `0 0 0 3px ${GREEN_GLOW}` : "none" }}
+              className={`flex items-center gap-2.5 px-3.5 py-1.5 rounded-md cursor-pointer text-xs font-inherit transition-all shadow-sm border ${showMenu ? 'border-green-500/40 shadow-[0_0_0_3px_rgba(34,197,94,0.25)] bg-secondary' : 'border-border hover:bg-muted bg-background text-foreground'}`}
             >
               <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase", color: diff.color, background: diff.bg, padding: "3px 8px", borderRadius: 3 }}>
                 {currentLevel.difficulty}
               </span>
-              <span style={{ color: "#333", fontSize: 11 }}>#{currentLevel.id}</span>
-              <span className="hidden sm:inline-block text-[#ddd] font-semibold">{currentLevel.title}</span>
-              <span style={{ color: "#333", fontSize: 9, marginLeft: 2 }}>▾</span>
+              <span className="text-muted-foreground text-[11px]">#{currentLevel.id}</span>
+              <span className="hidden sm:inline-block text-foreground font-semibold">{currentLevel.title}</span>
+              <span className="text-muted-foreground text-[9px] ml-0.5">▾</span>
             </button>
 
             {showMenu && (
@@ -159,11 +159,9 @@ export default function Battle() {
                             key={lvl.id}
                             data-testid={`level-item-${lvl.id}`}
                             onClick={() => handleLevelChange(lvl.id)}
-                            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 14px", background: active ? "#111" : "transparent", border: "none", borderLeft: active ? `2px solid ${GREEN}` : "2px solid transparent", cursor: "pointer", color: active ? "#fff" : "#666", fontSize: 12, fontFamily: "inherit", textAlign: "left", transition: "all 0.12s" }}
-                            onMouseEnter={(e) => { if (!active) { (e.currentTarget as HTMLButtonElement).style.background = "#111"; (e.currentTarget as HTMLButtonElement).style.color = "#ccc"; } }}
-                            onMouseLeave={(e) => { if (!active) { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "#666"; } }}
+                            className={`flex items-center gap-2.5 w-full px-3.5 py-2.5 border-l-2 text-xs font-inherit text-left transition-all ${active ? 'bg-secondary border-green-500 text-foreground' : 'bg-transparent border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'}`}
                           >
-                            <span style={{ color: "#2a2a2a", width: 22, fontSize: 10 }}>#{lvl.id}</span>
+                            <span className="text-muted-foreground/50 w-[22px] text-[10px]">#{lvl.id}</span>
                             <span style={{ flex: 1 }}>{lvl.title}</span>
                             {active && <span style={{ color: GREEN, fontSize: 14, lineHeight: 1 }}>●</span>}
                           </button>
@@ -190,9 +188,8 @@ export default function Battle() {
             data-testid="button-submit"
             onClick={calculateScore}
             disabled={isSubmitting}
-            style={{ padding: "8px 24px", background: isSubmitting ? "#111" : GREEN, border: "none", borderRadius: 6, color: isSubmitting ? "#333" : "#000", fontWeight: 800, fontSize: 12, fontFamily: "inherit", letterSpacing: 1.5, textTransform: "uppercase", cursor: isSubmitting ? "not-allowed" : "pointer", boxShadow: isSubmitting ? "none" : `0 0 20px ${GREEN_GLOW}`, transition: "all 0.2s", opacity: pulse ? 0.6 : 1 }}
-            onMouseEnter={(e) => { if (!isSubmitting) { (e.currentTarget as HTMLButtonElement).style.background = GREEN_DIM; } }}
-            onMouseLeave={(e) => { if (!isSubmitting) { (e.currentTarget as HTMLButtonElement).style.background = GREEN; } }}
+            className={`px-6 py-2 border-none rounded-md font-extrabold text-xs tracking-[1.5px] uppercase transition-all ${isSubmitting ? 'bg-secondary text-muted-foreground cursor-not-allowed shadow-none' : 'bg-green-500 hover:bg-green-600 text-black cursor-pointer shadow-[0_0_20px_rgba(34,197,94,0.25)]'}`}
+            style={{ opacity: pulse ? 0.6 : 1 }}
           >
             {isSubmitting ? "Analyzing..." : "Submit"}
           </button>
@@ -211,12 +208,12 @@ export default function Battle() {
           <div className="h-[38px] bg-card border-b border-border flex items-stretch shrink-0">
             <div className="flex items-center gap-2 px-4 border-r border-border bg-background border-b-2" style={{ borderBottomColor: GREEN, marginBottom: -1 }}>
               <span style={{ color: GREEN, fontSize: 11 }}>◆</span>
-              <span style={{ fontSize: 11, color: "#ccc", letterSpacing: 0.5 }}>style.html</span>
+              <span className="text-muted-foreground text-[11px] tracking-wide">style.html</span>
             </div>
             <div style={{ flex: 1 }} />
             <div className="flex items-center px-3.5 text-[10px] text-muted-foreground tracking-widest">HTML / CSS</div>
           </div>
-          <Suspense fallback={<div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#2a2a2a", fontSize: 12 }}>Loading editor...</div>}>
+          <Suspense fallback={<div className="flex-1 flex items-center justify-center text-muted-foreground text-xs">Loading editor...</div>}>
             <div style={{ flex: 1, overflow: "hidden" }}>
               <Editor
                 height="100%"
@@ -251,8 +248,8 @@ export default function Battle() {
           {/* Output */}
           <div className="flex-1 flex flex-col">
             <div className="h-[38px] bg-card border-b border-border flex items-center px-4 gap-2.5 shrink-0">
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#555", display: "inline-block", flexShrink: 0 }} />
-              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: "#555", textTransform: "uppercase" }}>Your Output</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground inline-block shrink-0" />
+              <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Your Output</span>
               <div style={{ flex: 1 }} />
               {score !== null && (
                 <span style={{ fontSize: 11, fontWeight: 800, color: scoreColor, letterSpacing: 0.5 }}>{score.toFixed(1)}% match</span>
